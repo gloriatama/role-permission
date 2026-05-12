@@ -22,14 +22,27 @@ function ensureScreenshotDir() {
  */
 async function loginToOdoo(page, url, username, password) {
     const loginUrl = url.replace(/\/+$/, '') + '/web/login';
-    await page.goto(loginUrl, { waitUntil: 'networkidle', timeout: 30000 });
+    
+    console.log(`  Navigating to ${loginUrl}...`);
+    try {
+        await page.goto(loginUrl, { waitUntil: 'domcontentloaded', timeout: 45000 });
+    } catch (e) {
+        console.warn(`  [WARN] Page load timeout, checking for login form anyway...`);
+    }
+
+    // Wait for the login input to be visible
+    await page.waitForSelector('input[name="login"]', { state: 'visible', timeout: 15000 });
 
     await page.fill('input[name="login"]', username);
     await page.fill('input[name="password"]', password);
     await page.click('button[type="submit"]');
 
-    // Wait for navigation after login
-    await page.waitForLoadState('networkidle', { timeout: 30000 });
+    // Wait for the dashboard to start loading
+    try {
+        await page.waitForLoadState('domcontentloaded', { timeout: 30000 });
+    } catch (e) {
+        console.warn(`  [WARN] Post-login navigation wait exceeded.`);
+    }
 }
 
 /**
