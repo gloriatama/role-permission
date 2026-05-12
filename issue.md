@@ -1,82 +1,60 @@
-# Perencanaan Web App Testing Odoo
+# Perencanaan Fitur Tampilan Hasil Testing Odoo di Web
 
 ## Tujuan
-Membuat web application sederhana menggunakan Express.js dan HTML native untuk mengumpulkan data URL Odoo serta kredensial akun untuk beberapa role (Admin, Sales, dll). Saat ini, sistem belum perlu dikoneksikan dengan eksekusi script Playwright.
+Fase ini bertujuan untuk meningkatkan antarmuka pengguna (UI) agar hasil pengujian otomatis (Playwright) dapat dilihat langsung di halaman web tanpa perlu mengecek folder lokal. Pengguna akan melihat status pengujian (Berhasil/Gagal) untuk tiap role beserta pratinjau (preview) screenshot yang diambil.
 
 ## Kebutuhan (Requirements)
-1. **Teknologi**: Node.js, Express.js, HTML/CSS biasa (tanpa framework frontend seperti React/Vue).
-2. **Halaman UI**:
-   - Sebuah form input yang rapi dan mudah digunakan.
-   - Field untuk memasukkan **URL Website Odoo**.
-   - Field **Username** dan **Password** untuk Role **Admin**.
-   - Field **Username** dan **Password** untuk Role **Sales**.
-   - Tombol submit dengan teks **"Mulai Testing"**.
-3. **Backend API (Express)**:
-   - Route `GET /` untuk merender/mengirimkan halaman HTML form.
-   - Route `POST /start-testing` untuk menerima data form ketika di-submit.
-   - Saat menerima data POST, untuk saat ini cukup lakukan `console.log()` untuk mencetak payload ke terminal, dan kembalikan respons JSON atau HTML sederhana yang menandakan data berhasil diterima.
+1. **Status Pengujian per Role**:
+   - UI harus memisahkan hasil testing untuk role Admin dan Sales.
+   - Tampilkan indikator status sukses atau gagal untuk masing-masing role.
+2. **Galeri Screenshot Visual**:
+   - Gambar screenshot yang diambil oleh Playwright harus dirender langsung di dalam halaman hasil.
+   - Menyediakan fitur *lightbox* atau modal: saat gambar diklik, gambar membesar agar detailnya terlihat jelas.
+3. **Pengalaman Pengguna (UX) yang Mulus**:
+   - Form disubmit menggunakan metode asynchronous (AJAX / Fetch API) agar halaman tidak refresh.
+   - Tampilkan animasi loading (spinner) dan teks status (misal: "Memulai browser...", "Login sebagai Admin...") selama proses pengujian yang memakan waktu lama.
+4. **Penyesuaian Backend API**:
+   - Endpoint `POST /start-testing` harus diubah untuk merespons dengan data JSON yang terstruktur (status, role, daftar file screenshot), bukan lagi teks HTML biasa.
+   - Folder tempat menyimpan screenshot harus diekspos sebagai file statis agar bisa diakses public oleh tag `<img>`.
 
 ## Langkah-langkah Implementasi
 
-### 1. Persiapan Proyek
-- Pastikan project sudah diinisialisasi dengan `npm init -y` (jika belum).
-- Install Express dengan menjalankan perintah:
-  ```bash
-  npm install express
-  ```
-
-### 2. Struktur Direktori
-Buat file dan folder dengan struktur berikut:
-```text
-/
-├── public/
-│   └── index.html   <-- File antarmuka form
-├── server.js        <-- Entry point untuk Express server
-└── package.json
-```
-
-### 3. Pembuatan Antarmuka (UI) - `public/index.html`
-- Buat struktur dokumen HTML5 standar.
-- Tambahkan styling CSS sederhana di dalam tag `<style>` (atau file terpisah) agar form terlihat menarik dan rapi (misalnya menggunakan Flexbox/Grid, padding, dan border yang memadai).
-- Buat form yang menargetkan endpoint backend: `<form action="/start-testing" method="POST">`
-- Masukkan input field berikut beserta labelnya:
-  - Input `url` (type="url", name="odooUrl", required)
-  - Input `adminUsername` (type="text", name="adminUsername", required)
-  - Input `adminPassword` (type="password", name="adminPassword", required)
-  - Input `salesUsername` (type="text", name="salesUsername", required)
-  - Input `salesPassword` (type="password", name="salesPassword", required)
-- Tambahkan tombol submit: `<button type="submit">Mulai Testing</button>`
-
-### 4. Setup Backend - `server.js`
-- Import modul `express` dan inisialisasi aplikasi `const app = express();`.
-- Gunakan middleware untuk membaca payload form URL-encoded dan JSON:
+### 1. Modifikasi Backend (`server.js`)
+- Daftarkan direktori `screenshots` agar dapat diakses publik melalui browser:
   ```javascript
-  app.use(express.urlencoded({ extended: true }));
-  app.use(express.json());
+  app.use('/screenshots', express.static(path.join(__dirname, 'screenshots')));
   ```
-- Sajikan file statis dari folder `public`:
+- Ubah respons endpoint `/start-testing` untuk mengembalikan JSON. Contoh:
   ```javascript
-  app.use(express.static('public'));
-  ```
-- Buat route `POST /start-testing`:
-  ```javascript
-  app.post('/start-testing', (req, res) => {
-      const data = req.body;
-      console.log("Data Testing Diterima:", data);
-      res.send("<h3>Data berhasil diterima. Silakan cek console server.</h3>");
+  res.json({
+      success: true,
+      data: [
+          { role: 'admin', status: 'success', screenshots: ['admin-1.png', 'admin-2.png'] },
+          { role: 'sales', status: 'failed', error: 'Invalid password', screenshots: ['sales-error.png'] }
+      ]
   });
   ```
-- Jalankan server di port tertentu (misal: 3000):
-  ```javascript
-  const PORT = 3000;
-  app.listen(PORT, () => {
-      console.log(`Server berjalan di http://localhost:${PORT}`);
-  });
-  ```
+
+### 2. Modifikasi Logic Automasi (`utils/testRunner.js`)
+- Pastikan kode Playwright mengembalikan struktur objek yang mencatat status ('success' atau 'failed'), daftar nama file screenshot yang berhasil digenerate, dan pesan error (jika ada).
+- Berikan penanganan error (try-catch) per role, sehingga jika satu role gagal, keseluruhan aplikasi tidak crash dan role lain tetap bisa dilaporkan statusnya.
+
+### 3. Modifikasi Frontend (`public/index.html`)
+- **JavaScript Fetch**: Tambahkan event listener `submit` pada form, cegah default action (`e.preventDefault()`), lalu gunakan `fetch()` untuk POST data form.
+- **Loading UI**: Buat section HTML untuk loading spinner. Sembunyikan form dan tampilkan spinner saat request berjalan.
+- **Rendering Hasil**:
+  - Tangkap respons JSON dari server.
+  - Sembunyikan spinner.
+  - Buat elemen DOM secara dinamis (menggunakan `document.createElement` atau template string) untuk merender hasil.
+  - Kelompokkan hasil per role. Tampilkan text ✅ Berhasil atau ❌ Gagal.
+  - Iterasi array `screenshots` dan buat elemen `<img src="/screenshots/nama-file.png">`.
+- **Implementasi Lightbox**: Buat elemen div overlay yang awalnya tersembunyi. Tambahkan event `onclick` pada setiap gambar hasil untuk menampilkan overlay tersebut beserta gambar ukuran penuhnya.
 
 ## Kriteria Selesai (Acceptance Criteria)
-- [ ] Server Express dapat di-start (`node server.js`) tanpa terjadi error.
-- [ ] Halaman form dapat diakses di browser melalui URL `http://localhost:3000`.
-- [ ] Form memiliki field URL, kredensial Admin, dan kredensial Sales sesuai permintaan.
-- [ ] Saat tombol "Mulai Testing" ditekan, data berhasil dikirim dan tidak ada error pada halaman.
-- [ ] Di console terminal / server log, data input (URL dan semua username/password) berhasil tercetak dengan benar.
+- [x] Halaman web tidak ter-refresh (reload) saat form disubmit.
+- [x] Loading spinner animasi muncul selama Playwright sedang memproses.
+- [x] Hasil dikelompokkan dengan jelas berdasarkan nama role (Admin/Sales).
+- [x] Status keberhasilan atau kegagalan (termasuk error message) terlihat jelas.
+- [x] Thumbnail screenshot muncul dan memuat gambar dengan benar tanpa broken image.
+- [x] Gambar dapat diklik untuk memunculkan lightbox/modal yang menampilkan versi aslinya.
+- [x] (Opsional) Terdapat tombol untuk "Kembali" atau "Uji Ulang" untuk mereset tampilan kembali ke form awal tanpa perlu me-refresh seluruh halaman.
