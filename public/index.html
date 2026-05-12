@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Odoo Test Runner - Konfigurasi</title>
+    <style>
+        :root {
+            --primary: #714B67; /* Odoo Purple */
+            --primary-light: #8e6283;
+            --secondary: #00A09D; /* Odoo Teal */
+            --bg: #f8f9fa;
+            --card: #ffffff;
+            --text: #333333;
+            --text-muted: #666666;
+            --border: #e0e0e0;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 500px;
+            background: var(--card);
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            margin: 0;
+            color: var(--primary);
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        p.subtitle {
+            color: var(--text-muted);
+            font-size: 14px;
+            margin-top: 8px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1.5px solid var(--border);
+            border-radius: 8px;
+            font-size: 15px;
+            box-sizing: border-box;
+            transition: all 0.2s ease;
+            outline: none;
+        }
+
+        input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(113, 75, 103, 0.1);
+        }
+
+        .role-section {
+            background: #fdfdfd;
+            border: 1px solid var(--border);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+        }
+
+        .role-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--secondary);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+
+        .role-title::before {
+            content: '';
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background-color: var(--secondary);
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s ease;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background-color: var(--primary-light);
+        }
+
+        button:active {
+            transform: scale(0.99);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        @media (max-width: 480px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Odoo Test Runner</h1>
+            <p class="subtitle">Masukkan konfigurasi environment untuk memulai testing.</p>
+        </header>
+
+        <form action="/start-testing" method="POST">
+            <div class="form-group">
+                <label for="odooUrl">Website URL</label>
+                <input type="url" id="odooUrl" name="odooUrl" placeholder="https://example.odoo.com" required>
+            </div>
+
+            <div class="role-section">
+                <div class="role-title">Admin Account</div>
+                <div class="grid">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label for="adminUsername">Username</label>
+                        <input type="text" id="adminUsername" name="adminUsername" placeholder="admin@email.com" required>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label for="adminPassword">Password</label>
+                        <input type="password" id="adminPassword" name="adminPassword" required>
+                    </div>
+                </div>
+            </div>
+
+            <div class="role-section">
+                <div class="role-title">Sales Account</div>
+                <div class="grid">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label for="salesUsername">Username</label>
+                        <input type="text" id="salesUsername" name="salesUsername" placeholder="sales@email.com" required>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label for="salesPassword">Password</label>
+                        <input type="password" id="salesPassword" name="salesPassword" required>
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit">Mulai Testing</button>
+        </form>
+    </div>
+</body>
+</html>
