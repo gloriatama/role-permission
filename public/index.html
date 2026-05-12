@@ -4,17 +4,24 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Odoo Test Runner - Konfigurasi</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #714B67; /* Odoo Purple */
+            --primary: #714B67;
             --primary-light: #8e6283;
-            --secondary: #00A09D; /* Odoo Teal */
+            --secondary: #00A09D;
+            --secondary-light: #00c4c0;
             --bg: #f8f9fa;
             --card: #ffffff;
             --text: #333333;
             --text-muted: #666666;
             --border: #e0e0e0;
+            --danger: #e74c3c;
+            --success: #27ae60;
         }
+
+        * { box-sizing: border-box; }
 
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -23,18 +30,23 @@
             margin: 0;
             display: flex;
             justify-content: center;
-            align-items: center;
+            align-items: flex-start;
             min-height: 100vh;
-            padding: 20px;
+            padding: 40px 20px;
         }
 
         .container {
             width: 100%;
-            max-width: 500px;
+            max-width: 540px;
             background: var(--card);
             padding: 40px;
             border-radius: 16px;
             box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            transition: max-width 0.4s ease;
+        }
+
+        .container.expanded {
+            max-width: 800px;
         }
 
         header {
@@ -61,7 +73,7 @@
 
         label {
             display: block;
-            font-size: 13px;
+            font-size: 12px;
             font-weight: 600;
             margin-bottom: 8px;
             color: var(--primary);
@@ -75,7 +87,7 @@
             border: 1.5px solid var(--border);
             border-radius: 8px;
             font-size: 15px;
-            box-sizing: border-box;
+            font-family: inherit;
             transition: all 0.2s ease;
             outline: none;
         }
@@ -86,7 +98,7 @@
         }
 
         .role-section {
-            background: #fdfdfd;
+            background: #fafafa;
             border: 1px solid var(--border);
             padding: 20px;
             border-radius: 12px;
@@ -94,7 +106,7 @@
         }
 
         .role-title {
-            font-size: 15px;
+            font-size: 14px;
             font-weight: 700;
             color: var(--secondary);
             margin-bottom: 15px;
@@ -110,28 +122,7 @@
             background-color: var(--secondary);
             border-radius: 50%;
             margin-right: 10px;
-        }
-
-        button {
-            width: 100%;
-            padding: 14px;
-            background-color: var(--primary);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background 0.2s ease;
-            margin-top: 10px;
-        }
-
-        button:hover {
-            background-color: var(--primary-light);
-        }
-
-        button:active {
-            transform: scale(0.99);
+            flex-shrink: 0;
         }
 
         .grid {
@@ -140,21 +131,199 @@
             gap: 15px;
         }
 
+        button[type="submit"] {
+            width: 100%;
+            padding: 14px;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-top: 10px;
+        }
+
+        button[type="submit"]:hover:not(:disabled) {
+            background-color: var(--primary-light);
+        }
+
+        button[type="submit"]:active:not(:disabled) {
+            transform: scale(0.99);
+        }
+
+        button[type="submit"]:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+        /* ---- Progress Overlay ---- */
+        #progress-section {
+            display: none;
+            text-align: center;
+            padding: 30px 0;
+        }
+
+        .spinner {
+            width: 48px;
+            height: 48px;
+            border: 4px solid var(--border);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        #progress-text {
+            font-size: 15px;
+            color: var(--text-muted);
+            margin: 0;
+        }
+
+        #progress-detail {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-top: 6px;
+            opacity: 0.7;
+        }
+
+        /* ---- Results Section ---- */
+        #results-section {
+            display: none;
+        }
+
+        .result-header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .result-header .icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+
+        .result-header h2 {
+            margin: 0;
+            font-size: 20px;
+        }
+
+        .result-header.success h2 { color: var(--success); }
+        .result-header.error h2 { color: var(--danger); }
+
+        .role-result {
+            background: #fafafa;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .role-result h3 {
+            margin: 0 0 15px 0;
+            font-size: 15px;
+            color: var(--secondary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .screenshot-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 12px;
+        }
+
+        .screenshot-card {
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+            background: white;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .screenshot-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .screenshot-card img {
+            width: 100%;
+            display: block;
+            cursor: pointer;
+        }
+
+        .screenshot-card .name {
+            padding: 8px 12px;
+            font-size: 11px;
+            color: var(--text-muted);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .btn-back {
+            display: inline-block;
+            padding: 12px 28px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            transition: background 0.2s;
+            margin-top: 10px;
+        }
+
+        .btn-back:hover {
+            background: var(--primary-light);
+        }
+
+        /* ---- Lightbox ---- */
+        .lightbox {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.85);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .lightbox.active {
+            display: flex;
+        }
+
+        .lightbox img {
+            max-width: 90vw;
+            max-height: 90vh;
+            border-radius: 8px;
+            box-shadow: 0 0 40px rgba(0,0,0,0.5);
+        }
+
         @media (max-width: 480px) {
-            .grid {
-                grid-template-columns: 1fr;
-            }
+            .grid { grid-template-columns: 1fr; }
+            .container { padding: 24px; }
         }
     </style>
 </head>
 <body>
-    <div class="container">
+    <div class="container" id="main-container">
         <header>
             <h1>Odoo Test Runner</h1>
             <p class="subtitle">Masukkan konfigurasi environment untuk memulai testing.</p>
         </header>
 
-        <form action="/start-testing" method="POST">
+        <!-- Form Section -->
+        <form id="test-form">
             <div class="form-group">
                 <label for="odooUrl">Website URL</label>
                 <input type="url" id="odooUrl" name="odooUrl" placeholder="https://example.odoo.com" required>
@@ -188,8 +357,163 @@
                 </div>
             </div>
 
-            <button type="submit">Mulai Testing</button>
+            <button type="submit" id="submit-btn">Mulai Testing</button>
         </form>
+
+        <!-- Progress Section -->
+        <div id="progress-section">
+            <div class="spinner"></div>
+            <p id="progress-text">Memulai pengujian...</p>
+            <p id="progress-detail">Browser sedang dibuka, mohon tunggu.</p>
+        </div>
+
+        <!-- Results Section -->
+        <div id="results-section">
+            <div class="result-header" id="result-header">
+                <div class="icon"></div>
+                <h2></h2>
+            </div>
+            <div id="results-container"></div>
+            <div style="text-align: center;">
+                <button class="btn-back" onclick="resetForm()">Kembali ke Form</button>
+            </div>
+        </div>
     </div>
+
+    <!-- Lightbox -->
+    <div class="lightbox" id="lightbox" onclick="closeLightbox()">
+        <img id="lightbox-img" src="" alt="Screenshot">
+    </div>
+
+    <script>
+        const form = document.getElementById('test-form');
+        const submitBtn = document.getElementById('submit-btn');
+        const progressSection = document.getElementById('progress-section');
+        const progressText = document.getElementById('progress-text');
+        const progressDetail = document.getElementById('progress-detail');
+        const resultsSection = document.getElementById('results-section');
+        const resultHeader = document.getElementById('result-header');
+        const resultsContainer = document.getElementById('results-container');
+        const mainContainer = document.getElementById('main-container');
+
+        const progressMessages = [
+            { text: 'Memulai pengujian...', detail: 'Browser sedang dibuka, mohon tunggu.' },
+            { text: 'Login sebagai Admin...', detail: 'Memasukkan kredensial Admin ke Odoo.' },
+            { text: 'Mengambil screenshot Admin...', detail: 'Mengunjungi halaman dan menyimpan bukti.' },
+            { text: 'Login sebagai Sales...', detail: 'Memasukkan kredensial Sales ke Odoo.' },
+            { text: 'Mengambil screenshot Sales...', detail: 'Mengunjungi halaman dan menyimpan bukti.' },
+            { text: 'Menyelesaikan pengujian...', detail: 'Menutup browser dan menyiapkan hasil.' },
+        ];
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            // Show progress
+            form.style.display = 'none';
+            resultsSection.style.display = 'none';
+            progressSection.style.display = 'block';
+            submitBtn.disabled = true;
+
+            // Cycle through progress messages
+            let msgIndex = 0;
+            const progressInterval = setInterval(() => {
+                msgIndex = Math.min(msgIndex + 1, progressMessages.length - 1);
+                progressText.textContent = progressMessages[msgIndex].text;
+                progressDetail.textContent = progressMessages[msgIndex].detail;
+            }, 5000);
+
+            try {
+                const formData = new URLSearchParams(new FormData(form));
+                const response = await fetch('/start-testing', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: formData,
+                });
+
+                clearInterval(progressInterval);
+                const result = await response.json();
+
+                if (result.success) {
+                    showResults(result.data);
+                } else {
+                    showError(result.message);
+                }
+            } catch (err) {
+                clearInterval(progressInterval);
+                showError('Gagal terhubung ke server: ' + err.message);
+            }
+        });
+
+        function showResults(data) {
+            progressSection.style.display = 'none';
+            resultsSection.style.display = 'block';
+            mainContainer.classList.add('expanded');
+
+            // Determine overall success (all roles succeeded)
+            const overallSuccess = data.every(r => r.status === 'success');
+            resultHeader.className = overallSuccess ? 'result-header success' : 'result-header error';
+            resultHeader.querySelector('.icon').textContent = overallSuccess ? '✅' : '❌';
+            resultHeader.querySelector('h2').textContent = overallSuccess ? 'Pengujian Selesai!' : 'Pengujian Selesai dengan Error';
+
+            resultsContainer.innerHTML = '';
+
+            data.forEach(roleResult => {
+                const section = document.createElement('div');
+                section.className = 'role-result';
+
+                const roleName = roleResult.role.charAt(0).toUpperCase() + roleResult.role.slice(1);
+                const statusIcon = roleResult.status === 'success' ? '✅' : '❌';
+                const statusText = roleResult.status === 'success' ? 'Berhasil' : 'Gagal';
+                const errorMsg = roleResult.error ? `<p class="error-msg" style="color: var(--danger); margin-top:5px;">${roleResult.error}</p>` : '';
+
+                section.innerHTML = `
+                    <h3>${statusIcon} ${roleName} — ${statusText}</h3>
+                    ${errorMsg}
+                `;
+
+                const grid = document.createElement('div');
+                grid.className = 'screenshot-grid';
+
+                roleResult.screenshots.forEach(filename => {
+                    const card = document.createElement('div');
+                    card.className = 'screenshot-card';
+                    card.innerHTML = `
+                        <img src="/screenshots/${filename}" alt="${filename}" onclick="openLightbox('/screenshots/${filename}')">
+                        <div class="name">${filename}</div>
+                    `;
+                    grid.appendChild(card);
+                });
+
+                section.appendChild(grid);
+                resultsContainer.appendChild(section);
+            });
+        }
+
+        function showError(message) {
+            progressSection.style.display = 'none';
+            resultsSection.style.display = 'block';
+
+            resultHeader.className = 'result-header error';
+            resultHeader.querySelector('.icon').textContent = '❌';
+            resultHeader.querySelector('h2').textContent = message;
+            resultsContainer.innerHTML = '';
+        }
+
+        function resetForm() {
+            resultsSection.style.display = 'none';
+            form.style.display = 'block';
+            submitBtn.disabled = false;
+            mainContainer.classList.remove('expanded');
+        }
+
+        function openLightbox(src) {
+            document.getElementById('lightbox-img').src = src;
+            document.getElementById('lightbox').classList.add('active');
+        }
+
+        function closeLightbox() {
+            document.getElementById('lightbox').classList.remove('active');
+        }
+    </script>
 </body>
 </html>
