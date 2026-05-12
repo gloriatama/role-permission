@@ -14,6 +14,22 @@ function ensureScreenshotDir() {
 }
 
 /**
+ * Helper to wait for Odoo 17 UI to be fully ready.
+ */
+async function waitForOdooReady(page) {
+    try {
+        // Odoo 17 main UI elements
+        await page.waitForSelector('.o_navbar, .o_home_menu, .o_main_content', { state: 'visible', timeout: 20000 });
+        // Wait for potential loading bar to disappear
+        await page.waitForSelector('.o_loading', { state: 'hidden', timeout: 10000 }).catch(() => {});
+        // Extra breath for JS execution
+        await page.waitForTimeout(1500);
+    } catch (e) {
+        console.warn('  [WARN] Timeout waiting for Odoo UI readiness indicator.');
+    }
+}
+
+/**
  * Logs into Odoo via the /web/login page.
  * @param {import('playwright').Page} page
  * @param {string} url - Base Odoo URL
@@ -23,26 +39,23 @@ function ensureScreenshotDir() {
 async function loginToOdoo(page, url, username, password) {
     const loginUrl = url.replace(/\/+$/, '') + '/web/login';
     
-    console.log(`  Navigating to ${loginUrl}...`);
-    try {
-        await page.goto(loginUrl, { waitUntil: 'domcontentloaded', timeout: 45000 });
-    } catch (e) {
-        console.warn(`  [WARN] Page load timeout, checking for login form anyway...`);
-    }
+    console.log(`  Navigating to login page...`);
+    await page.goto(loginUrl, { waitUntil: 'domcontentloaded', timeout: 45000 });
 
-    // Wait for the login input to be visible
-    await page.waitForSelector('input[name="login"]', { state: 'visible', timeout: 15000 });
+    // Handle Odoo 17 Login Selectors
+    const loginSelector = 'input#login';
+    const passwordSelector = 'input#password';
+    const submitSelector = 'button.btn-primary[type="submit"]';
 
-    await page.fill('input[name="login"]', username);
-    await page.fill('input[name="password"]', password);
-    await page.click('button[type="submit"]');
+    console.log(`  Filling credentials...`);
+    await page.waitForSelector(loginSelector, { state: 'visible', timeout: 15000 });
+    await page.fill(loginSelector, username);
+    await page.fill(passwordSelector, password);
+    await page.click(submitSelector);
 
-    // Wait for the dashboard to start loading
-    try {
-        await page.waitForLoadState('domcontentloaded', { timeout: 30000 });
-    } catch (e) {
-        console.warn(`  [WARN] Post-login navigation wait exceeded.`);
-    }
+    // Odoo 17 redirect wait (Support both /odoo and /web patterns)
+    await page.waitForURL(/(\/odoo|\/web)/, { timeout: 30000 });
+    await waitForOdooReady(page);
 }
 
 /**
@@ -54,11 +67,12 @@ async function loginToOdoo(page, url, username, password) {
  */
 async function visitAndScreenshot(page, url, menuPath, screenshotName) {
     const fullUrl = url.replace(/\/+$/, '') + menuPath;
+    console.log(`  Visiting ${menuPath}...`);
     try {
-        await page.goto(fullUrl, { waitUntil: 'networkidle', timeout: 30000 });
-        await page.waitForTimeout(2000); // Extra wait for Odoo JS to render
+        await page.goto(fullUrl, { waitUntil: 'domcontentloaded', timeout: 30000 });
+        await waitForOdooReady(page);
     } catch (e) {
-        console.warn(`  [WARN] Timeout navigating to ${menuPath}, taking screenshot anyway...`);
+        console.warn(`  [WARN] Navigation to ${menuPath} slow, capturing current state.`);
     }
     const filePath = path.join(SCREENSHOTS_DIR, screenshotName);
     await page.screenshot({ path: filePath, fullPage: true });
@@ -94,21 +108,21 @@ async function testRole(browser, config) {
 
         // Step 2: Screenshot the dashboard (landing page after login)
         const dashScreenshot = await visitAndScreenshot(
-            page, url, '/odoo',
+            page, url, '/web',
             `${roleName}-dashboard-${timestamp}.png`
         );
         screenshots.push(dashScreenshot);
 
-        // Step 3: Visit Settings page (typically admin-accessible)
+        // Step 3: Visit Settings page
         const settingsScreenshot = await visitAndScreenshot(
-            page, url, '/odoo/settings',
+            page, url, '/web#menu_id=settings', // Attempt common hash path
             `${roleName}-settings-${timestamp}.png`
         );
         screenshots.push(settingsScreenshot);
 
-        // Step 4: Visit Contacts page (commonly accessible)
+        // Step 4: Visit Contacts page
         const contactsScreenshot = await visitAndScreenshot(
-            page, url, '/odoo/contacts',
+            page, url, '/web#menu_id=contacts', // Attempt common hash path
             `${roleName}-contacts-${timestamp}.png`
         );
         screenshots.push(contactsScreenshot);
